@@ -6,7 +6,7 @@ specifiers:
   '@types/react-dom': 18.0.6
   '@typescript-eslint/eslint-plugin': ^5.36.1
   '@typescript-eslint/parser': ^5.36.1
-  '@webcast.js/socket': ^1.0.0
+  '@webcast.js/socket': ^1.1.0
   autoprefixer: ^10.4.8
   eslint: 8.23.0
   eslint-config-next: 12.2.5
@@ -24,7 +24,7 @@ specifiers:
   typescript: 4.8.2
 
 dependencies:
-  '@webcast.js/socket': 1.0.0
+  '@webcast.js/socket': 1.1.0
   next: 12.2.5_biqbaboplfbrettd7655fr4n2y
   react: 18.2.0
   react-dom: 18.2.0_react@18.2.0
@@ -425,8 +425,8 @@ packages:
       eslint-visitor-keys: 3.3.0
     dev: true
 
-  /@webcast.js/socket/1.0.0:
-    resolution: {integrity: sha512-e7QZCbX0lYZsVerDvnjpcdKP4Zi1AM9Q6CDm7pgsCpNjo+0qm+Guu8WvaxuzVZ79I5q8Kw222PTH+sQaD6xVow==}
+  /@webcast.js/socket/1.1.0:
+    resolution: {integrity: sha512-6YRxypElQkEmGTGEb8ownMZKON3ZUMHgvvFN4GxrNAtIRHtxfjNavzeju5NsxLe38NzCNCke9Q8ECsoMw6jBmg==}
     dev: false
 
   /acorn-jsx/5.3.2_acorn@8.8.0:
