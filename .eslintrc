@@ -1,0 +1,66 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "settings": {
+    "react": {
+      "version": "detect"
+    }
+  },
+  "plugins": [
+    "unused-imports",
+    "import",
+    "@typescript-eslint",
+    "react-hooks",
+    "react",
+    "eslint-comments"
+  ],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/eslint-recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "prettier",
+  ],
+  "rules": {
+    "@typescript-eslint/explicit-member-accessibility": "off",
+    "@typescript-eslint/explicit-module-boundary-types": "off",
+    "@typescript-eslint/explicit-function-return-type": "off",
+    "@typescript-eslint/no-parameter-properties": "off",
+    "@nrwl/nx/enforce-module-boundaries": "off",
+    "no-await-in-loop": "error",
+    "class-methods-use-this": "error",
+    "react/react-in-jsx-scope": "off",
+    "react/prefer-stateless-function": "error",
+    "react/prop-types": "off",
+    "prefer-const": "error",
+    "import/no-unused-modules": "error",
+    "eslint-comments/no-unused-disable": "error",
+    "no-unused-vars": "off",
+    "eqeqeq": ["error", "smart"],
+    "require-await": "error",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/ban-ts-comment": "error",
+    "unused-imports/no-unused-imports": "error",
+    "unused-imports/no-unused-vars": [
+      "error",
+      {
+        "vars": "all",
+        "varsIgnorePattern": "^_",
+        "args": "after-used",
+        "argsIgnorePattern": "^_"
+      }
+    ],
+    "quotes": ["error", "double", { "avoidEscape": true }],
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": ["error"],
+    "no-trailing-spaces": ["error"],
+    "no-console": "warn",
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": ["../*"]
+      }
+    ]
+  },
+}
