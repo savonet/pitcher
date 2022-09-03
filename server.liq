@@ -177,6 +177,10 @@ s = add([bg, slides, guest1, guest2, speaker, chat])
 #ytenc = %ffmpeg(format="flv", %audio(codec="libmp3lame", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
 #ytenc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
 
+enc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
+
+output.harbor(mount="stream", port=8001, enc, s)
+
 #output.youtube.live.rtmp(key=ytkey, encoder=ytenc, mksafe(s))
 #output.youtube.live.hls(key=ytkey, encoder=ytenc, mksafe(s))
 output.dummy(mksafe(s))
