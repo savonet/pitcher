@@ -6,8 +6,13 @@ Proving to the world that we can stream a webcam directly from a browser to
 
 ## Building
 
-First, make sure that `next` is installed with `npm i next`. Then run the
-project with
+First, download the required node modules
+
+```sh
+npm install
+```
+
+Then run the project with
 
 ```sh
 npm run dev
