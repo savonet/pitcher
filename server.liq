@@ -1,11 +1,13 @@
 #!../liquidsoap/liquidsoap
 #!/bin/env -S liquidsoap
 
-log.level.set(4)
-
 width = 960
 height = 540
-dvid = height/3
+height_chat = 60
+width_cam = height/3
+height_cam = height/3
+
+buffer = 0.5
 
 set("log.level", 5)
 set("frame.video.width", width)
@@ -26,12 +28,15 @@ interactive.harbor()
 
 ### The slideshow
 
+timeout = interactive.int("slides.timeout", description="Timeout for converting slides (in seconds).", 180.)
+
 # Convert a pdf to a list of png files.
-def pdf2png(pdf)
+def pdf2png(~timeout=timeout,pdf)
   dir = file.temp_dir("liqpdf")
-  if process.test(timeout=120., process.quote.command("pdftoppm",  args=["-png", pdf, "#{dir}/slide-"])) then
+  if process.test(timeout=getter.get(timeout), process.quote.command("pdftoppm", args=["-progress", "-png", pdf, "#{dir}/slide-"])) then
     file.ls(absolute=true, sorted=true, dir)
   else
+    log.important("Conversion of pdf to png failed.")
     []
   end
 end
@@ -50,8 +55,8 @@ def advance(next)
 end
 harbor.http.register("^/previous$", advance(false))
 harbor.http.register("^/next$", advance(true))
-interactive.unit("prev", description="Go to the previous slide.", slides.prev)
-interactive.unit("next", description="Go to the next slide.", slides.next)
+interactive.unit("slides.prev", description="Go to the previous slide.", slides.prev)
+interactive.unit("slides.next", description="Go to the next slide.", slides.next)
 
 # Current slide
 def slide(~protocol=_, ~data=_, ~headers=_, _)
@@ -74,12 +79,6 @@ def upload_options(~protocol=_, ~data=_, ~headers=_, _)
 end
 harbor.http.register(method="OPTIONS", "upload", upload_options)
 def upload(~protocol=_, ~data, ~headers, _)
-  print("headers: #{headers}")
-  # print("GOT DATA")
-  # print("headers: #{headers}")
-  # print("url: #{url}")
-  # print("DATA: <#{data}>")
-  # print("END DATA")
   fname = file.temp("liq", ".pdf")
   file.write(data=data, fname)
 
@@ -92,32 +91,58 @@ def upload(~protocol=_, ~data, ~headers, _)
     end
   end)
 
-  http.response(headers=[("Access-Control-Allow-Origin","*")], data="Slides processing..")
+  http.response(headers=[("Access-Control-Allow-Origin","*")], data="Processing slides.")
 end
 harbor.http.register(method="POST", "upload", upload)
 
 ### The speaker
 
-speaker = input.harbor(buffer=1., "speaker", port=8000)
+speaker = input.harbor(buffer=buffer, "speaker", port=8000)
 speaker = video.crop(speaker)
 speaker = fallback(track_sensitive=false, [speaker, video.color(0x0000ff)])
 
 ### Guests
 
-guest1 = input.harbor(buffer=1., "guest1", port=8000)
+guest1 = input.harbor(buffer=buffer, "guest1", port=8000)
 guest1 = video.crop(guest1)
-guest1 = fallback(track_sensitive=false, [guest1, video.color(0x00ff00)])
+# guest1 = fallback(track_sensitive=false, [guest1, video.color(0x00ff00)])
 
-guest2 = input.harbor(buffer=1., "guest2", port=8000)
+guest2 = input.harbor(buffer=buffer, "guest2", port=8000)
 guest2 = video.crop(guest2)
-guest2 = fallback(track_sensitive=false, [guest2, video.color(0xff0000)])
+# guest2 = fallback(track_sensitive=false, [guest2, video.color(0xff0000)])
+
+### The chat
+
+chat = ref([])
+
+interactive.unit("chat.clear", description="Clear the contents of the chat.", fun(_) -> chat := [])
+
+def chat_message(~protocol=_, ~data, ~headers=_, _)
+  chat := data :: !chat
+  chat := list.prefix(100, !chat)
+  http.response()
+end
+harbor.http.register(method="POST", "chat/message", chat_message)
+
+def chat(n=1000)
+  chat = list.prefix(n, !chat)
+  string.concat(separator="\n", list.rev(chat))
+end
+
+def chat_get(~protocol=_, ~data=_, ~headers=_, _)
+  http.response(data=chat())
+end
+harbor.http.register("chat/get", chat_get)
+
+chat = video.text.sdl(size=15, color=0x000000, {chat(3)})
 
 ### Combine everybody
 
-slides = video.align(slides)
-slides = video.resize(width=width-dvid, height=height, slides)
+slides = video.crop(slides)
+slides = video.resize(proportional=true, width=width-width_cam, height=height-height_chat, slides)
+slides = video.align(top=true, slides)
 
-speaker = video.resize(proportional=true, width=dvid, height=dvid, speaker)
+speaker = video.resize(proportional=true, width=width_cam, height=height_cam, speaker)
 
 # TODO: the following makes a segv when changing the value...
 # swap = interactive.bool("swap-speaker-slides", description="Swap speaker and slides.", false)
@@ -126,20 +151,23 @@ speaker = video.resize(proportional=true, width=dvid, height=dvid, speaker)
 # speaker = source.dynamic({if swap() then slides' else speaker end})
 
 speaker = video.align(top=true, right=true, speaker)
-speaker = video.translate(x=width-dvid, speaker)
+speaker = video.translate(x=width-width_cam, speaker)
 
-guest1 = video.resize(proportional=true, width=dvid, height=dvid, guest1)
+guest1 = video.resize(proportional=true, width=width_cam, height=height_cam, guest1)
 guest1 = video.align(right=true, guest1)
-guest1 = video.translate(x=width-dvid, y=dvid, guest1)
+guest1 = video.translate(x=width-width_cam, y=height_cam, guest1)
 
-guest2 = video.resize(proportional=true, width=dvid, height=dvid, guest2)
+guest2 = video.resize(proportional=true, width=width_cam, height=height_cam, guest2)
 guest2 = video.align(bottom=true, right=true, guest2)
-guest2 = video.translate(x=width-dvid, y=2*dvid, guest2)
+guest2 = video.translate(x=width-width_cam, y=2*height_cam, guest2)
+
+chat = video.viewport(chat)
+chat = video.align(bottom=true, chat)
+chat = video.translate(y=-5, chat)
 
 bg = video.color(0xeeeeee)
 
-s = add([bg, slides, guest1, guest2, speaker])
-s = video.add_text(x=width, y=height-50, speed=100, color=0xff0000, "Hello world!", s)
+s = add([bg, slides, guest1, guest2, speaker, chat])
 
 ### Encode
 
