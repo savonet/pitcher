@@ -46,7 +46,7 @@ const mkConnect = ({
 }) => {
   const mediaRecorder = new MediaRecorder(mediaStream, {
     mimeType,
-    videoBitsPerSecond: bitrate,
+    videoBitsPerSecond: bitrate * 1000,
   })
 
   let webcastSocket: Socket | undefined
