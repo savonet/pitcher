@@ -3,7 +3,7 @@ import Head from "next/head"
 import Image from "next/image"
 import Video from "@videocast/components/Video"
 import Slides from "@videocast/components/Slides"
-import Stream from "@videocast/components/Stream"
+import HarborStream from "@videocast/components/HarborStream"
 import Connection from "@videocast/components/Connection"
 
 const Home: NextPage = () => {
@@ -16,7 +16,7 @@ const Home: NextPage = () => {
         <Video />
       </div>
       <div>
-        <Stream />
+        <HarborStream />
       </div>
       <div className='col-span-full w-full max-w-lg'>
         <Connection />

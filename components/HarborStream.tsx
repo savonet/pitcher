@@ -1,6 +1,6 @@
 import { useWebcastContext } from "@videocast/components/useWebcastContext"
 
-const Stream = () => {
+const HarborStream = () => {
   return (
     <>
       <div>
@@ -10,4 +10,4 @@ const Stream = () => {
   )
 }
 
-export default Stream
+export default HarborStream
