@@ -177,7 +177,8 @@ s = add([bg, slides, guest1, guest2, speaker, chat])
 #ytenc = %ffmpeg(format="flv", %audio(codec="libmp3lame", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
 #ytenc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
 
-enc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
+# enc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
+enc = %ffmpeg(format="webm", %audio(codec="libopus", samplerate=24000), %video(codec="libvpx-vp9", deadline="realtime"))
 
 output.harbor(mount="stream", port=8001, enc, s)
 
