@@ -41,7 +41,7 @@ const Slides = () => {
     if (!inputRef.current.files) return
     if (inputRef.current.files.length === 0) return
     void uploadSlides({ baseUrl, file: inputRef.current.files[0] })
-  }, [baseUrl, setIsReady, inputRef])
+  }, [baseUrl, inputRef])
 
   const onPrevious = useCallback(async () => {
     setIsReady(false)
