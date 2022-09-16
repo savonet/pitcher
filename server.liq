@@ -47,40 +47,40 @@ slides = video.slideshow(png)
 
 # Move slides
 def advance(next)
-  fun (~protocol=_, ~data=_, ~headers=_, _) -> begin
+  fun (_) -> begin
     if next then log.info("Going to the next slide.") else log.info("Going to the previous slide.") end
     if next then slides.next() else slides.prev() end
     http.response(headers=[("Access-Control-Allow-Origin","*")])
   end
 end
-harbor.http.register("^/previous$", advance(false))
-harbor.http.register("^/next$", advance(true))
+harbor.http.register.simple("^/previous$", advance(false))
+harbor.http.register.simple("^/next$", advance(true))
 interactive.unit("slides.prev", description="Go to the previous slide.", slides.prev)
 interactive.unit("slides.next", description="Go to the next slide.", slides.next)
 
 # Current slide
-def slide(~protocol=_, ~data=_, ~headers=_, _)
+def slide(_)
   http.response(data=file.contents(slides.current()))
 end
-harbor.http.register("^/slide", slide)
+harbor.http.register.simple("^/slide", slide)
 
 slides_ready = ref(false)
-def slides_ready_handler(~protocol=_, ~data=_, ~headers=_, _) =
+def slides_ready_handler(_) =
   http.response(headers=[("Access-Control-Allow-Origin","*"),
                          ("Access-Control-Allow-Headers","*")],
                 content_type="application/json",
                 data=json.stringify({ready = !slides_ready}))
 end
-harbor.http.register("^/slides_ready$", slides_ready_handler)
+harbor.http.register.simple("^/slides_ready$", slides_ready_handler)
 
 # Upload slides
-def upload_options(~protocol=_, ~data=_, ~headers=_, _)
-  http.response(headers=[("Access-Control-Allow-Origin","*"),("Access-Control-Allow-Headers","*")], code=204)
+def upload_options(_)
+  http.response(headers=[("Access-Control-Allow-Origin","*"),("Access-Control-Allow-Headers","*")], status_code=204)
 end
-harbor.http.register(method="OPTIONS", "upload", upload_options)
-def upload(~protocol=_, ~data, ~headers=_, _)
+harbor.http.register.simple(method="OPTIONS", "upload", upload_options)
+def upload(request)
   fname = file.temp("liq", ".pdf")
-  file.write(data=data, fname)
+  file.write(data=request.data, fname)
 
   thread.run(fun () -> begin
     png = pdf2png(fname)
@@ -93,7 +93,7 @@ def upload(~protocol=_, ~data, ~headers=_, _)
 
   http.response(headers=[("Access-Control-Allow-Origin","*")], data="Processing slides.")
 end
-harbor.http.register(method="POST", "upload", upload)
+harbor.http.register.simple(method="POST", "upload", upload)
 
 ### The speaker
 
@@ -117,23 +117,22 @@ chat = ref([])
 
 interactive.unit("chat.clear", description="Clear the contents of the chat.", fun(_) -> chat := [])
 
-def chat_message(~protocol=_, ~data, ~headers=_, _)
-  chat := data :: !chat
+def chat_message(request)
+  chat := request.data :: !chat
   chat := list.prefix(100, !chat)
   http.response()
 end
-harbor.http.register(method="POST", "chat/message", chat_message)
+harbor.http.register.simple(method="POST", "chat/message", chat_message)
 
 def chat(n=1000)
   chat = list.prefix(n, !chat)
   string.concat(separator="\n", list.rev(chat))
 end
 
-def chat_get(~protocol=_, ~data=_, ~headers=_, _)
-  print("***** chat contents get")
+def chat_get(request)
   http.response(data=chat())
 end
-harbor.http.register("chat/get", chat_get)
+harbor.http.register.simple("chat/get", chat_get)
 
 chat = video.text.sdl(size=15, color=0x000000, {chat(3)})
 
