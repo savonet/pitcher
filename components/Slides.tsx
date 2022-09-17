@@ -12,7 +12,8 @@ const Slides = () => {
   } = useWebcastContext()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const baseUrl = `http://${host}:${port}`
+  const proto = process.env.PITCHER_HOST ? "https" : "http"
+  const baseUrl = `${proto}://${host}:${port}`
 
   useEffect(() => {
     let handler: ReturnType<typeof setTimeout> | undefined

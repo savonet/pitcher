@@ -26,7 +26,7 @@ type WebcastContextType = {
 const initialConnectionOptions: ConnectionOptions = {
   user: "source",
   password: "hackme",
-  host: "localhost",
+  host: process.env.PITCHER_HOST || "localhost",
   port: 8000,
   mount: "speaker",
   bitrate: 500,
@@ -82,9 +82,11 @@ const mkConnect = ({
         }
       }
 
+      const proto = process.env.PITCHER_HOST ? "wss" : "ws"
+
       webcastSocket = new Socket({
         mediaRecorder,
-        url: `ws://${user}:${password}@${host}:${port}/${mount}`,
+        url: `${proto}://${user}:${password}@${host}:${port}/${mount}`,
         info: {},
         onOpen,
         onError,

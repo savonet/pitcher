@@ -1,38 +1,39 @@
-import {useState} from 'react';
+import { useState } from "react"
 
 const Chat = () => {
-  const [nick, setNick] = useState('Bob');
-  const [messages, setMessages] = useState('');
-  const [message, setMessage] = useState('');
+  const [nick, setNick] = useState("Bob")
+  const [messages, setMessages] = useState("")
+  const [message, setMessage] = useState("")
 
-  let updater = undefined;
+  let updater = undefined
+  const host = process.env.PITCHER_HOST || "localhost"
 
   const update = async () => {
     // console.log("updating chat");
     // if (document.getElementById('chat-update').checked)
-    const response = await fetch("http://localhost:8000" + "/chat/get", {mode: "no-cors"});
-    const text = await response.text();
-    console.log("chat contents: " + messages);
-    setMessages(text);
+    const response = await fetch(`http://${host}:8000/chat/get`, { mode: "no-cors" })
+    const text = await response.text()
+    console.log("chat contents: " + messages)
+    setMessages(text)
     //updater = setTimeout(update, 1000);
   }
 
-  updater = setTimeout(update, 0);
+  updater = setTimeout(update, 0)
 
   const sendMessage = () => {
-    if (message !== '') {
-      setMessage('');
-      const url = "http://localhost:8000" + "/chat/message";
-      const data = `<${nick}> ${message}`;
+    if (message !== "") {
+      setMessage("")
+      const url = `http://${host}:8000/chat/message`
+      const data = `<${nick}> ${message}`
       // console.log("Message: " + data);
-      setMessages(messages + ((messages == "") ? "" : "\n") + data);
-      fetch(url, {mode: "no-cors", method: "POST", body: data})
+      setMessages(messages + (messages == "" ? "" : "\n") + data)
+      fetch(url, { mode: "no-cors", method: "POST", body: data })
     }
   }
 
-  const onChatKey = (event) => {
-    if(event.key === 'Enter'){
-      sendMessage();
+  const onChatKey = (event: React.KeyboardEvent) => {
+    if (event.key === "Enter") {
+      sendMessage()
     }
   }
 
@@ -40,15 +41,21 @@ const Chat = () => {
     <>
       <div>
         <form onSubmit={event => event.preventDefault()}>
-          <textarea id="chat" rows="20" value={messages} readOnly></textarea>
-          <input id="chat-message" placeholder="Type your message here." value={message} onChange={event => setMessage(event.target.value)} onKeyPress={onChatKey}/>
+          <textarea id='chat' rows={20} value={messages} readOnly></textarea>
+          <input
+            id='chat-message'
+            placeholder='Type your message here.'
+            value={message}
+            onChange={event => setMessage(event.target.value)}
+            onKeyPress={onChatKey}
+          />
         </form>
 
         <form onSubmit={event => event.preventDefault()}>
           <label>Nick in chat</label>
-          <input id="chat-nick" defaultValue={nick} onChange={event => setNick(event.target.value)}/>
+          <input id='chat-nick' defaultValue={nick} onChange={event => setNick(event.target.value)} />
           <label>Update chat</label>
-          <input id="chat-update" type="checkbox" defaultChecked/>
+          <input id='chat-update' type='checkbox' defaultChecked />
         </form>
       </div>
     </>
