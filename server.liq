@@ -1,19 +1,42 @@
 #!../liquidsoap/liquidsoap
 #!/bin/env -S liquidsoap
 
-width = 960
-height = 540
+width = 1280
+height = 720
 height_chat = 60
 width_cam = height/3
 height_cam = height/3
 
-buffer = 0.5
+buffer = 0.1
 
-set("log.level", 3)
-set("frame.video.width", width)
-set("frame.video.height", height)
+log.level.set(3)
+video.frame.width.set(width)
+video.frame.height.set(height)
 
 ### The server
+
+ssl_certificate = environment.get("SSL_CERT_PATH")
+ssl_key = environment.get("SSL_KEY_PATH")
+port = environment.get("PORT") ?? 8000
+
+transport =
+  if null.defined(ssl_certificate) and null.defined(ssl_key) then
+    http.transport.ssl(
+      certificate=null.get(ssl_certificate),
+      key=null.get(ssl_key)
+    )
+  else
+    http.transport.unix
+  end
+
+harbor.http.middleware.register(harbor.http.middleware.cors(allowed_headers=["*"]))
+
+def replaces harbor.http.register(~method="GET", path, handler) =
+  if method != "OPTIONS" then
+    harbor.http.register(transport=transport, port=port, method="OPTIONS", fun (_, _) -> ())
+  end
+  harbor.http.register(transport=transport, port=port, method=method, path, handler)
+end
 
 def content_type(fname)
   if string.contains(suffix=".html", fname) then "text/html"
@@ -22,9 +45,9 @@ def content_type(fname)
   else "text/plain"
   end
 end
-harbor.http.static(content_type=content_type, path="/speaker", ".")
+harbor.http.static(transport=transport, content_type=content_type, path="/speaker", ".")
 
-interactive.harbor()
+interactive.harbor(transport=transport)
 
 ### The slideshow
 
@@ -33,6 +56,7 @@ timeout = interactive.int("slides.timeout", description="Timeout for converting 
 # Convert a pdf to a list of png files.
 def pdf2png(~timeout=timeout,pdf)
   dir = file.temp_dir("liqpdf")
+  log("processing pdf file")
   if process.test(timeout=getter.get(timeout), process.quote.command("pdftoppm", args=["-progress", "-png", pdf, "#{dir}/slide-"])) then
     file.ls(absolute=true, sorted=true, dir)
   else
@@ -47,40 +71,33 @@ slides = video.slideshow(png)
 
 # Move slides
 def advance(next)
-  fun (_) -> begin
+  fun (_, _) -> begin
     if next then log.info("Going to the next slide.") else log.info("Going to the previous slide.") end
     if next then slides.next() else slides.prev() end
-    http.response(headers=[("Access-Control-Allow-Origin","*")])
   end
 end
-harbor.http.register.simple("^/previous$", advance(false))
-harbor.http.register.simple("^/next$", advance(true))
+harbor.http.register("/previous", advance(false))
+harbor.http.register("/next", advance(true))
 interactive.unit("slides.prev", description="Go to the previous slide.", slides.prev)
 interactive.unit("slides.next", description="Go to the next slide.", slides.next)
 
 # Current slide
-def slide(_)
-  http.response(data=file.contents(slides.current()))
+def slide(_, res)
+  res.content_type("image/png")
+  res.data(file.read(slides.current()))
 end
-harbor.http.register.simple("^/slide", slide)
+harbor.http.register("/slide", slide)
 
 slides_ready = ref(false)
-def slides_ready_handler(_) =
-  http.response(headers=[("Access-Control-Allow-Origin","*"),
-                         ("Access-Control-Allow-Headers","*")],
-                content_type="application/json",
-                data=json.stringify({ready = !slides_ready}))
+def slides_ready_handler(_, res) =
+  res.json({ready = !slides_ready})
 end
-harbor.http.register.simple("^/slides_ready$", slides_ready_handler)
+harbor.http.register("/slides_ready", slides_ready_handler)
 
 # Upload slides
-def upload_options(_)
-  http.response(headers=[("Access-Control-Allow-Origin","*"),("Access-Control-Allow-Headers","*")], status_code=204)
-end
-harbor.http.register.simple(method="OPTIONS", "upload", upload_options)
-def upload(request)
+def upload(req, _)
   fname = file.temp("liq", ".pdf")
-  file.write(data=request.data, fname)
+  file.write(data=req.data, fname)
 
   thread.run(fun () -> begin
     png = pdf2png(fname)
@@ -90,24 +107,22 @@ def upload(request)
       slides_ready := true
     end
   end)
-
-  http.response(headers=[("Access-Control-Allow-Origin","*")], data="Processing slides.")
 end
-harbor.http.register.simple(method="POST", "upload", upload)
+harbor.http.register(method="POST", "/upload", upload)
 
 ### The speaker
 
-speaker = input.harbor(buffer=buffer, "speaker", port=8000)
+speaker = input.harbor(transport=transport, buffer=buffer, "speaker", port=8000)
 speaker = video.crop(speaker)
 speaker = fallback(track_sensitive=false, [speaker, video.color(0x0000ff)])
 
 ### Guests
 
-guest1 = input.harbor(buffer=buffer, "guest1", port=8000)
+guest1 = input.harbor(transport=transport, buffer=buffer, "guest1", port=8000)
 guest1 = video.crop(guest1)
 # guest1 = fallback(track_sensitive=false, [guest1, video.color(0x00ff00)])
 
-guest2 = input.harbor(buffer=buffer, "guest2", port=8000)
+guest2 = input.harbor(transport=transport, buffer=buffer, "guest2", port=8000)
 guest2 = video.crop(guest2)
 # guest2 = fallback(track_sensitive=false, [guest2, video.color(0xff0000)])
 
@@ -117,24 +132,23 @@ chat = ref([])
 
 interactive.unit("chat.clear", description="Clear the contents of the chat.", fun(_) -> chat := [])
 
-def chat_message(request)
-  chat := request.data :: !chat
+def chat_message(req, _)
+  chat := req.data :: !chat
   chat := list.prefix(100, !chat)
-  http.response()
 end
-harbor.http.register.simple(method="POST", "chat/message", chat_message)
+harbor.http.register(method="POST", "/chat/message", chat_message)
 
 def chat(n=1000)
   chat = list.prefix(n, !chat)
   string.concat(separator="\n", list.rev(chat))
 end
 
-def chat_get(request)
-  http.response(data=chat())
+def chat_get(_, res)
+  res.data(chat())
 end
-harbor.http.register.simple("chat/get", chat_get)
+harbor.http.register("/chat/get", chat_get)
 
-chat = video.text.sdl(size=15, color=0x000000, {chat(3)})
+chat = video.text(size=15, color=0x000000, {chat(3)})
 
 ### Combine everybody
 
@@ -173,8 +187,17 @@ s = add([bg, slides, guest1, guest2, speaker, chat])
 
 #output.graphics(mksafe(s))
 
-#ytkey = string.trim(file.contents("youtube-key"))
-#ytenc = %ffmpeg(format="flv", %audio(codec="libmp3lame", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
+ytkey = string.trim(file.contents("youtube-key"))
+ytenc = %ffmpeg(
+#  format="mpegts",
+  format="flv",
+  fflags="nobuffer",
+  flags="low_delay",
+  %audio(codec="aac"),
+  %video(codec="libx264",
+         preset="ultrafast",
+         tune="zerolatency")
+)
 #ytenc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
 
 # enc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
@@ -182,6 +205,11 @@ s = add([bg, slides, guest1, guest2, speaker, chat])
 
 # output.harbor.hls(path="stream", port=8001, streams_info=[], [("video/webm",enc)], s)
 
-#output.youtube.live.rtmp(key=ytkey, encoder=ytenc, mksafe(s))
-#output.youtube.live.hls(key=ytkey, encoder=ytenc, mksafe(s))
-output.dummy(mksafe(s))
+output.youtube.live.rtmp(key=ytkey, encoder=ytenc, mksafe(s))
+#output.youtube.live.hls(
+#  segment_duration=0.01,
+#  key=ytkey,
+#  encoder=ytenc,
+#  mksafe(s)
+#)
+#output.dummy(mksafe(s))
