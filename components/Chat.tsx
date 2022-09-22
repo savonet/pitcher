@@ -20,11 +20,10 @@ const Chat = () => {
 
   updater = setTimeout(update, 0)
 
-  const sendMessage = () => {
-    if (message !== "") {
-      setMessage("")
+  const sendMessage = (msg) => {
+    if (msg !== "") {
       const url = `http://${host}:8000/chat/message`
-      const data = `<${nick}> ${message}`
+      const data = `<${nick}> ${msg}`
       // console.log("Message: " + data);
       setMessages(messages + (messages == "" ? "" : "\n") + data)
       fetch(url, { mode: "no-cors", method: "POST", body: data })
@@ -33,7 +32,8 @@ const Chat = () => {
 
   const onChatKey = (event: React.KeyboardEvent) => {
     if (event.key === "Enter") {
-      sendMessage()
+      sendMessage(message)
+      setMessage("")
     }
   }
 

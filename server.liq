@@ -133,7 +133,9 @@ chat = ref([])
 interactive.unit("chat.clear", description="Clear the contents of the chat.", fun(_) -> chat := [])
 
 def chat_message(req, _)
-  chat := req.data :: !chat
+  message = req.data
+  print("***** NEW MESSAGE: #{message}")
+  chat := message :: !chat
   chat := list.prefix(100, !chat)
 end
 harbor.http.register(method="POST", "/chat/message", chat_message)
@@ -144,6 +146,7 @@ def chat(n=1000)
 end
 
 def chat_get(_, res)
+  print("****** GET CHAT: #{chat()}")
   res.data(chat())
 end
 harbor.http.register("/chat/get", chat_get)
@@ -215,3 +218,5 @@ end
 #  mksafe(s)
 #)
 #output.dummy(mksafe(s))
+
+# output.graphics(s)
