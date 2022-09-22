@@ -5,6 +5,7 @@ type ConnectionOptions = {
   user: string
   password: string
   host: string
+  useSSL: boolean
   port: number
   mount: string
   bitrate: number
@@ -23,10 +24,13 @@ type WebcastContextType = {
   setIsStreaming: (_: boolean) => void
 }
 
+const PITCHER_HOST = "pitcher.liquidsoap.info"
+
 const initialConnectionOptions: ConnectionOptions = {
   user: "source",
   password: "hackme",
-  host: process.env.PITCHER_HOST || "localhost",
+  host: PITCHER_HOST,
+  useSSL: true,
   port: 8000,
   mount: "speaker",
   bitrate: 500,

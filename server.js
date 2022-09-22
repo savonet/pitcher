@@ -9,6 +9,8 @@ const dev = true
 const app = next({ dev, dir: __dirname })
 const handle = app.getRequestHandler()
 
+process.env.PITCHER_HOST = "pitcher.liquidsoap.info"
+
 var options = {
   key: fs.readFileSync("/etc/letsencrypt/live/pitcher.liquidsoap.info/privkey.pem"),
   cert: fs.readFileSync("/etc/letsencrypt/live/pitcher.liquidsoap.info/fullchain.pem"),

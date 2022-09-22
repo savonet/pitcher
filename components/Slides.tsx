@@ -8,11 +8,11 @@ const Slides = () => {
   const [isReady, setIsReady] = useState(true)
   const [slideCounter, setSlideCounter] = useState(0)
   const {
-    connectionOptions: { host, port },
+    connectionOptions: { host, useSSL, port },
   } = useWebcastContext()
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const proto = process.env.PITCHER_HOST ? "https" : "http"
+  const proto = useSSL ? "https" : "http"
   const baseUrl = `${proto}://${host}:${port}`
 
   /*

@@ -1,16 +1,21 @@
 import { useState, useEffect, useCallback } from "react"
+import { useWebcastContext } from "@videocast/components/useWebcastContext"
 
 const Chat = () => {
   const [nick, setNick] = useState("Bob")
   const [sendDisabled, setSendDisabled] = useState(false)
   const [messages, setMessages] = useState("")
   const [message, setMessage] = useState("")
+  const {
+    connectionOptions: { host, useSSL, port },
+  } = useWebcastContext()
 
-  const host = process.env.PITCHER_HOST || "localhost"
+  const protocol = useSSL ? "https" : "http"
+  const baseUrl = `${protocol}://${host}:${port}`
 
   useEffect(() => {
     const update = async () => {
-      const response = await fetch(`https://${host}:8000/chat/get`)
+      const response = await fetch(`${baseUrl}/chat/get`)
       const text = await response.text()
       console.log("chat contents: " + text)
       setMessages(text)
@@ -18,7 +23,7 @@ const Chat = () => {
 
     const updater = setInterval(update, 1000)
     return () => clearInterval(updater)
-  }, [setMessages])
+  }, [setMessages, baseUrl])
 
   const sendMessage = useCallback(async () => {
     if (sendDisabled) return
@@ -26,14 +31,14 @@ const Chat = () => {
     setSendDisabled(true)
     setMessage("")
     try {
-      const url = `https://${host}:8000/chat/message`
+      const url = `${baseUrl}/chat/message`
       const data = `<${nick}> ${message}`
       setMessages(messages + (messages == "" ? "" : "\n") + data)
-      await fetch(url, { mode: "no-cors", method: "POST", body: data })
+      await fetch(url, { method: "POST", body: data })
     } finally {
       setSendDisabled(false)
     }
-  }, [nick, messages, message, setMessage, sendDisabled, setSendDisabled])
+  }, [baseUrl, nick, messages, message, setMessage, sendDisabled, setSendDisabled])
 
   return (
     <>
