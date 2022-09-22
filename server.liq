@@ -7,6 +7,7 @@ height_chat = 60
 width_cam = height/3
 height_cam = height/3
 
+let source.buffer = buffer
 buffer = 0.1
 
 log.level.set(3)
@@ -157,6 +158,7 @@ chat = video.text(size=15, color=0x000000, {chat(3)})
 
 ### Combine everybody
 
+slides = source.buffer(buffer=1.5, slides) # compensate video delay
 slides = video.crop(slides)
 slides = video.resize(proportional=true, width=width-width_cam, height=height-height_chat, slides)
 slides = video.align(top=true, slides)
