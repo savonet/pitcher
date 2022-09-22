@@ -1,8 +1,8 @@
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useRef } from "react"
 import { useWebcastContext } from "@videocast/components/useWebcastContext"
 
 const Chat = () => {
-  const [nick, setNick] = useState("Bob")
+  const [nick, setNick] = useState("nick", { defaultValue: "Bob" })
   const [sendDisabled, setSendDisabled] = useState(false)
   const [messages, setMessages] = useState("")
   const [message, setMessage] = useState("")
@@ -25,6 +25,12 @@ const Chat = () => {
     return () => clearInterval(updater)
   }, [setMessages, baseUrl])
 
+  const messagesArea = useRef();
+  // Scroll the textArea to the bottom.
+  useEffect(() => {
+    messagesArea.current.scrollTop = messagesArea.current.scrollHeight
+  });
+
   const sendMessage = useCallback(async () => {
     if (sendDisabled) return
 
@@ -44,7 +50,14 @@ const Chat = () => {
     <>
       <div>
         <form autoComplete="off" onSubmit={event => event.preventDefault()}>
-          <textarea id='chat' rows={20} cols={80} value={messages} readOnly></textarea>
+          <textarea
+            id='chat'
+            rows={20}
+            cols={80}
+            ref={messagesArea}
+            value={messages}
+            readOnly
+          />
           <input
             id='chat-message'
             type='text'
