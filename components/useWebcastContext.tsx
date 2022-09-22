@@ -67,7 +67,7 @@ const mkConnect = ({
     const connectWebcastSocket = () => {
       const onOpen = () => {
         connectCount = 0
-        if (mediaRecorder.state !== "recording") mediaRecorder.start()
+        if (mediaRecorder.state !== "recording") mediaRecorder.start(200)
         setIsStreaming(true)
       }
 

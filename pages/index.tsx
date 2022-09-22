@@ -3,7 +3,6 @@ import Head from "next/head"
 import Image from "next/image"
 import Video from "@videocast/components/Video"
 import Slides from "@videocast/components/Slides"
-import HarborStream from "@videocast/components/HarborStream"
 import Chat from "@videocast/components/Chat"
 import Connection from "@videocast/components/Connection"
 
@@ -15,9 +14,6 @@ const Home: NextPage = () => {
       </div>
       <div className='self-start justify-self-start'>
         <Video />
-      </div>
-      <div>
-        <HarborStream />
       </div>
       <div>
         <Chat />

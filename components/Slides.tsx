@@ -5,7 +5,7 @@ const uploadSlides = ({ baseUrl, file }: { baseUrl: string; file: File }) =>
   fetch(`${baseUrl}/upload`, { method: "POST", body: file })
 
 const Slides = () => {
-  const [isReady, setIsReady] = useState(false)
+  const [isReady, setIsReady] = useState(true)
   const [slideCounter, setSlideCounter] = useState(0)
   const {
     connectionOptions: { host, port },
@@ -15,6 +15,7 @@ const Slides = () => {
   const proto = process.env.PITCHER_HOST ? "https" : "http"
   const baseUrl = `${proto}://${host}:${port}`
 
+  /*
   useEffect(() => {
     let handler: ReturnType<typeof setTimeout> | undefined
 
@@ -36,6 +37,7 @@ const Slides = () => {
 
     return clear
   }, [setIsReady, baseUrl])
+*/
 
   const onChange = useCallback(() => {
     if (!inputRef.current) return
