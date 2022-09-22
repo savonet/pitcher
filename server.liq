@@ -13,6 +13,8 @@ log.level.set(3)
 video.frame.width.set(width)
 video.frame.height.set(height)
 
+user = string.trim(process.read("whoami"))
+
 ### The server
 
 ssl_certificate = environment.get("SSL_CERT_PATH")
@@ -219,4 +221,4 @@ end
 #)
 #output.dummy(mksafe(s))
 
-# output.graphics(s)
+if user == "smimram" then output.graphics(s) end
