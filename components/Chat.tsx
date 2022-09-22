@@ -43,10 +43,12 @@ const Chat = () => {
   return (
     <>
       <div>
-        <form onSubmit={event => event.preventDefault()}>
-          <textarea id='chat' rows={20} value={messages} readOnly></textarea>
+        <form autoComplete="off" onSubmit={event => event.preventDefault()}>
+          <textarea id='chat' rows={20} cols={80} value={messages} readOnly></textarea>
           <input
             id='chat-message'
+            type='text'
+            size='80'
             placeholder='Type your message here.'
             value={message}
             onChange={event => setMessage(event.target.value)}
@@ -64,7 +66,7 @@ const Chat = () => {
         </form>
 
         <form onSubmit={event => event.preventDefault()}>
-          <label>Nick in chat</label>
+          <label>Nickname : </label>
           <input id='chat-nick' defaultValue={nick} onChange={event => setNick(event.target.value)} />
         </form>
       </div>
