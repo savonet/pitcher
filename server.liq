@@ -17,7 +17,7 @@ video.frame.height.set(height)
 
 ssl_certificate = environment.get("SSL_CERT_PATH")
 ssl_key = environment.get("SSL_KEY_PATH")
-port = environment.get("PORT") ?? 8000
+port = int_of_string(environment.get("PORT") ?? "8000")
 
 transport =
   if null.defined(ssl_certificate) and null.defined(ssl_key) then
@@ -33,7 +33,7 @@ harbor.http.middleware.register(harbor.http.middleware.cors(allowed_headers=["*"
 
 def replaces harbor.http.register(~method="GET", path, handler) =
   if method != "OPTIONS" then
-    harbor.http.register(transport=transport, port=port, method="OPTIONS", fun (_, _) -> ())
+    harbor.http.register(transport=transport, port=port, method="OPTIONS", path, fun (_, _) -> ())
   end
   harbor.http.register(transport=transport, port=port, method=method, path, handler)
 end
@@ -187,17 +187,18 @@ s = add([bg, slides, guest1, guest2, speaker, chat])
 
 #output.graphics(mksafe(s))
 
-ytkey = string.trim(file.contents("youtube-key"))
-ytenc = %ffmpeg(
-#  format="mpegts",
+if file.exists("youtube-key") then
+  ytkey = string.trim(file.contents("youtube-key"))
+  ytenc = %ffmpeg(
+  #  format="mpegts",
   format="flv",
-  fflags="nobuffer",
-  flags="low_delay",
-  %audio(codec="aac"),
-  %video(codec="libx264",
-         preset="ultrafast",
-         tune="zerolatency")
-)
+    fflags="nobuffer",
+    flags="low_delay",
+    %audio(codec="aac"),
+    %video(codec="libx264",
+    preset="ultrafast",
+    tune="zerolatency")
+    )
 #ytenc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
 
 # enc = %ffmpeg(format="mpegts", %audio(codec="aac", samplerate=44100, q=5), %video(codec="libx264", width=width, height=height, b="800k", g=50, preset="veryfast"))
@@ -205,7 +206,8 @@ ytenc = %ffmpeg(
 
 # output.harbor.hls(path="stream", port=8001, streams_info=[], [("video/webm",enc)], s)
 
-output.youtube.live.rtmp(key=ytkey, encoder=ytenc, mksafe(s))
+  output.youtube.live.rtmp(key=ytkey, encoder=ytenc, mksafe(s))
+end
 #output.youtube.live.hls(
 #  segment_duration=0.01,
 #  key=ytkey,
