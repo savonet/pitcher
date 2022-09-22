@@ -47,6 +47,7 @@ const Slides = () => {
   }, [baseUrl, inputRef])
 
   const onPrevious = useCallback(async () => {
+    console.log("previous slide")
     setIsReady(false)
 
     try {
@@ -58,6 +59,7 @@ const Slides = () => {
   }, [setIsReady, setSlideCounter, slideCounter, baseUrl])
 
   const onNext = useCallback(async () => {
+    console.log("next slide")
     setIsReady(false)
 
     try {
@@ -67,6 +69,18 @@ const Slides = () => {
       setIsReady(true)
     }
   }, [setIsReady, setSlideCounter, slideCounter, baseUrl])
+
+  const handleKey = (event) => {
+    if(event.key === "ArrowRight") onNext()
+    if(event.key === "ArrowLeft") onPrevious()
+  }
+  useEffect(() => {
+    window.addEventListener("keydown", handleKey);
+    return () => {
+      window.removeEventListener("keydown", handleKey);
+    };
+  }, [])
+
 
   return (
     <>

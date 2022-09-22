@@ -17,7 +17,7 @@ const Chat = () => {
     const update = async () => {
       const response = await fetch(`${baseUrl}/chat/get`)
       const text = await response.text()
-      console.log("chat contents: " + text)
+      //console.log("chat contents: " + text)
       setMessages(text)
     }
 
