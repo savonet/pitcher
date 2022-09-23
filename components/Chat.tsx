@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from "react"
 import { useWebcastContext } from "@videocast/components/useWebcastContext"
 
 const Chat = () => {
-  const [nick, setNick] = useState("nick", { defaultValue: "Bob" })
+  const [nick, setNick] = useState("Bob")
   const [sendDisabled, setSendDisabled] = useState(false)
   const [messages, setMessages] = useState("")
   const [message, setMessage] = useState("")
